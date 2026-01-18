@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import ThumbUpAltOutlined from '@mui/icons-material/ThumbUpAltOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import { Link as RouterLink } from 'react-router-dom';
 
 /**
  * 게시글 목록 컴포넌트
@@ -24,7 +25,7 @@ function PostList({ posts }) {
       <List>
         {posts.map((post, index) => (
           <React.Fragment key={post.id}>
-            <ListItem button component="a" href={`/community/${post.id}`}>
+            <ListItem button component={RouterLink} to={`/community/${post.id}`}>
               <ListItemText
                 primary={
                   <Typography variant="h6" component="h3">
@@ -45,11 +46,11 @@ function PostList({ posts }) {
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
                       <ThumbUpAltOutlined sx={{ fontSize: 16, mr: 0.5 }} />
-                      <Typography variant="body2">{post.likes}</Typography>
+                      <Typography variant="body2">{post.likes || 0}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', ml: 1.5 }}>
                       <ChatBubbleOutlineOutlined sx={{ fontSize: 16, mr: 0.5 }} />
-                      <Typography variant="body2">{post.comments.length}</Typography>
+                      <Typography variant="body2">{post.comments?.length || 0}</Typography>
                     </Box>
                   </Box>
                 }

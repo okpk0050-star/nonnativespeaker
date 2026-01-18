@@ -1,34 +1,13 @@
 // src/pages/AdminBoard.jsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PostList from '../components/PostList';
-import { Button, Box, Typography } from '@mui/material';
+import { Button, Box, Typography, CircularProgress } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 // 이 값은 실제 애플리케이션에서는 로그인 상태에 따라 동적으로 결정되어야 합니다.
 const isAdmin = true;
-
-/**
- * 샘플 운영자 게시글 데이터
- */
-const sampleAdminPosts = [
-  {
-    id: 101,
-    title: '[공지] 11월 정기 업데이트 안내',
-    author: '운영자',
-    date: '2023년 11월 1일',
-    likes: 50,
-    comments: [],
-  },
-  {
-    id: 102,
-    title: '[팁] 한국 지하철, 이것만 알면 환승 마스터!',
-    author: '운영자',
-    date: '2023년 10월 28일',
-    likes: 120,
-    comments: [],
-  },
-];
 
 /**
  * 운영자 게시판 컴포넌트 (Weekly Trend & Tips)
@@ -36,6 +15,30 @@ const sampleAdminPosts = [
  * - PostList 컴포넌트를 사용하여 게시글 목록을 표시합니다.
  */
 function AdminBoard() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('category', 'trend')
+        .order('id', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data);
+    } catch (error) {
+      console.error('Error fetching trend posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -53,7 +56,14 @@ function AdminBoard() {
           </Button>
         )}
       </Box>
-      <PostList posts={sampleAdminPosts} />
+      
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <PostList posts={posts} />
+      )}
     </Box>
   );
 }

@@ -1,31 +1,10 @@
 // src/pages/RequestBoard.jsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PostList from '../components/PostList';
-import { Button, Box, Typography } from '@mui/material';
+import { Button, Box, Typography, CircularProgress } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-
-/**
- * 샘플 주제 요청 데이터
- */
-const sampleRequestPosts = [
-  {
-    id: 201,
-    title: '배달앱 사용법에 대한 자세한 가이드가 필요해요.',
-    author: 'newbie',
-    date: '2023년 10월 27일',
-    likes: 30,
-    comments: [],
-  },
-  {
-    id: 202,
-    title: '각 지역별 쓰레기 분리수거 방법에 대해 알려주세요.',
-    author: 'eco_friendly',
-    date: '2023년 10월 26일',
-    likes: 45,
-    comments: [],
-  },
-];
+import { supabase } from '../supabaseClient';
 
 /**
  * 요구 게시판 컴포넌트 (Request a Topic)
@@ -33,6 +12,30 @@ const sampleRequestPosts = [
  * - PostList 컴포넌트를 사용하여 게시글 목록을 표시합니다.
  */
 function RequestBoard() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('category', 'request')
+        .order('id', { ascending: false });
+
+      if (error) throw error;
+      setPosts(data);
+    } catch (error) {
+      console.error('Error fetching request posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -47,7 +50,14 @@ function RequestBoard() {
           새 요청 작성
         </Button>
       </Box>
-      <PostList posts={sampleRequestPosts} />
+      
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <PostList posts={posts} />
+      )}
     </Box>
   );
 }
