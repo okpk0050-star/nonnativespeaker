@@ -54,7 +54,7 @@ function Post() {
     if (!post) return;
     
     // 이미 좋아요를 눌렀다면 취소 (간단한 로직, 실제로는 사용자 ID 체크 필요)
-    const newLikes = liked ? post.likes - 1 : post.likes + 1;
+    const newLikes = liked ? (post.likes || 0) - 1 : (post.likes || 0) + 1;
     
     try {
       const { error } = await supabase
@@ -84,7 +84,8 @@ function Post() {
       date: new Date().toISOString()
     };
 
-    const updatedComments = [...(post.comments || []), newComment];
+    const currentComments = Array.isArray(post.comments) ? post.comments : [];
+    const updatedComments = [...currentComments, newComment];
 
     try {
       const { error } = await supabase
@@ -116,6 +117,9 @@ function Post() {
     return <Typography>게시글을 찾을 수 없습니다.</Typography>;
   }
 
+  // 댓글 배열 안전하게 가져오기
+  const comments = Array.isArray(post.comments) ? post.comments : [];
+
   return (
     <Paper elevation={3} sx={{ p: 4 }}>
       {/* 게시글 제목, 작성자 정보 */}
@@ -125,7 +129,7 @@ function Post() {
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
           <Avatar sx={{ width: 24, height: 24, mr: 1 }} />
-          <Typography variant="body1">{post.author}</Typography>
+          <Typography variant="body1">{post.author || '익명'}</Typography>
           <Typography variant="body2" sx={{ mx: 1 }}>·</Typography>
           <Typography variant="body2">{post.date}</Typography>
         </Box>
@@ -144,7 +148,7 @@ function Post() {
           startIcon={liked ? <ThumbUpAlt /> : <ThumbUpAltOutlined />}
           onClick={handleLike}
         >
-          추천 {post.likes}
+          추천 {post.likes || 0}
         </Button>
       </Box>
       <Divider sx={{ my: 2 }} />
@@ -152,17 +156,19 @@ function Post() {
       {/* 댓글 목록 */}
       <Box sx={{ mt: 3 }}>
         <Typography variant="h6" gutterBottom>
-          댓글 {(post.comments || []).length}개
+          댓글 {comments.length}개
         </Typography>
-        {(post.comments || []).map(comment => (
-          <Box key={comment.id} sx={{ display: 'flex', mb: 2 }}>
+        {comments.map((comment, index) => (
+          <Box key={comment?.id || index} sx={{ display: 'flex', mb: 2 }}>
             <Avatar sx={{ width: 32, height: 32, mr: 2 }} />
             <Box>
-              <Typography variant="body2" component="span" fontWeight="bold">{comment.author}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontSize: '0.8rem' }}>
-                {comment.date ? comment.date.split('T')[0] : ''}
+              <Typography variant="body2" component="span" fontWeight="bold">
+                {comment?.author || '익명'}
               </Typography>
-              <Typography variant="body2" sx={{ mt: 0.5 }}>{comment.content}</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontSize: '0.8rem' }}>
+                {comment?.date ? String(comment.date).split('T')[0] : ''}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>{comment?.content}</Typography>
             </Box>
           </Box>
         ))}
